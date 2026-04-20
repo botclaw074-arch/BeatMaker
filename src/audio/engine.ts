@@ -34,7 +34,7 @@ class AudioEngine {
 
   // Per-track sound settings - improved for richer sound
   private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 6000, filterResonance: 3.5, attack: 0.008, decay: 0.4, sustain: 0.65, release: 0.7 }
-  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 2500, filterResonance: 1.8, attack: 0.005, decay: 0.3, sustain: 0.6, release: 0.4 }
+  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 3000, filterResonance: 2.5, attack: 0.003, decay: 0.35, sustain: 0.7, release: 0.45 }
   private drumKitConfig: DrumKitConfig = { 
     name: 'default', 
     samples: {
@@ -155,11 +155,11 @@ class AudioEngine {
     return 440 * Math.pow(2, (note - 69) / 12)
   }
 
-  playNote(note: Note, startTime = 0, gain = 1) {
+  playNote(note: Note, startTime = 0, gain = 1, trackType: 'melody' | 'bass' = 'melody') {
     if (!this.ctx || !this.masterGain) return
 
     const vel = note.velocity / 127
-    const sound = this.melodySound
+    const sound = trackType === 'bass' ? this.bassSound : this.melodySound
     
     // Better synth: 3 oscillators for richer sound
     const osc1 = this.ctx.createOscillator()

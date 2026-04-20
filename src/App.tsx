@@ -360,7 +360,7 @@ export default function App() {
         if (track.type === 'melody' || track.type === 'bass') {
           const notes = getTrackNotes(track.id)
           notes.forEach(note => {
-            if (Math.floor(note.time) === step) audioEngine.playNote(note, 0, track.volume)
+            if (Math.floor(note.time) === step) audioEngine.playNote(note, 0, track.volume, track.type === 'bass' ? 'bass' : 'melody')
           })
         } else if (track.type === 'drums') {
           project.tracks.drums.pattern.forEach((pat, idx) => {
