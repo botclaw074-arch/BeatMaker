@@ -244,28 +244,28 @@ export default function App() {
     const startBeat = Math.ceil(lastNoteTime / 4) * 4
 
     try {
-      if (apiKey) {
-        addAIThought(`🤖 Calling AI (${currentKey} ${currentMode}, ${genre})...`)
-        const suggestion = await getAISuggestion(
-          apiKey,
-          project.tracks.melody.notes,
-          project.tracks.drums.pattern,
-          project.tracks.chords,
-          project.bpm,
-          currentKey,
-          currentMode
-        )
-        addAIThought(`✨ Got ${suggestion.melody.notes.length} notes from AI`)
-        applyAISuggestion(suggestion, startBeat)
-        setTotalBars(prev => Math.max(prev, Math.ceil((startBeat + 16) / 4)))
-      } else {
-        addAIThought(`🎛️ Using ${genre} preset (no API key)...`)
-        await new Promise(r => setTimeout(r, 300))
-        const suggestion = generateFallbackSuggestion(project.bpm, currentKey, currentMode, startBeat)
-        addAIThought(`✨ Generated ${suggestion.melody.notes.length} notes`)
-        applyAISuggestion(suggestion, startBeat)
-        setTotalBars(prev => Math.max(prev, Math.ceil((startBeat + 16) / 4)))
+      if (!apiKey) {
+        setErrorModal({
+          title: 'API Key Required',
+          message: 'No OpenRouter API key found.\n\nTo use AI generation, enter your API key in the settings panel (🤖 button).\n\nGet a free key at: https://openrouter.ai'
+        })
+        setIsGenerating(false)
+        return
       }
+      
+      addAIThought(`🤖 Calling AI (${currentKey} ${currentMode}, ${genre})...`)
+      const suggestion = await getAISuggestion(
+        apiKey,
+        project.tracks.melody.notes,
+        project.tracks.drums.pattern,
+        project.tracks.chords,
+        project.bpm,
+        currentKey,
+        currentMode
+      )
+      addAIThought(`✨ Got ${suggestion.melody.notes.length} notes from AI`)
+      applyAISuggestion(suggestion, startBeat)
+      setTotalBars(prev => Math.max(prev, Math.ceil((startBeat + 16) / 4)))
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error)
       let title = 'Generation Failed'
@@ -279,7 +279,7 @@ export default function App() {
 
       // Auto-fallback on error
       addAIThought('⚠️ AI error — using musical fallback')
-      const suggestion = generateFallbackSuggestion(project.bpm, currentKey, currentMode, startBeat)
+      const suggestion = generateFallbackSuggestion(project.bpm)
       applyAISuggestion(suggestion, startBeat)
       setTotalBars(prev => Math.max(prev, Math.ceil((startBeat + 16) / 4)))
 
