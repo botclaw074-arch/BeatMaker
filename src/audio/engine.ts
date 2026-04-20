@@ -30,11 +30,11 @@ class AudioEngine {
   private bpm = 120
   private synthWaveform: OscillatorType = 'sawtooth'
   private drumKit: string = 'default'
-  private reverbMix = 0.18
+  private reverbMix = 0.22
 
-  // Per-track sound settings
-  private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 4500, filterResonance: 2.2, attack: 0.015, decay: 0.35, sustain: 0.5, release: 0.6 }
-  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 2000, filterResonance: 1.2, attack: 0.01, decay: 0.25, sustain: 0.55, release: 0.35 }
+  // Per-track sound settings - improved for richer sound
+  private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 6000, filterResonance: 3.5, attack: 0.008, decay: 0.4, sustain: 0.65, release: 0.7 }
+  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 2500, filterResonance: 1.8, attack: 0.005, decay: 0.3, sustain: 0.6, release: 0.4 }
   private drumKitConfig: DrumKitConfig = { 
     name: 'default', 
     samples: {
@@ -54,7 +54,7 @@ class AudioEngine {
     
     this.ctx = new AudioContext()
     this.masterGain = this.ctx.createGain()
-    this.masterGain.gain.value = 0.7
+    this.masterGain.gain.value = 0.65
 
     this.analyserNode = this.ctx.createAnalyser()
     this.analyserNode.fftSize = 256
