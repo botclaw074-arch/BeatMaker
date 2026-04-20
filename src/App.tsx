@@ -101,6 +101,7 @@ export default function App() {
   const [showSounds, setShowSounds] = useState(false)
   const [showAI, setShowAI] = useState(true)
   const [showHotkeys, setShowHotkeys] = useState(false)
+  const [errorModal, setErrorModal] = useState<{title: string; message: string} | null>(null)
   const [isLooping, setIsLooping] = useState(true)
   const [isMetronomeOn, setIsMetronomeOn] = useState(false)
   
@@ -478,8 +479,28 @@ export default function App() {
 
         setTotalBars(prev => prev + 4)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error)
+      const errMsg = error?.message || error?.toString() || 'Unknown error'
+      
+      let title = 'Generation Failed'
+      let fix = ''
+      
+      if (errMsg.includes('404')) {
+        title = 'API Endpoint Error (404)'
+        fix = 'The API endpoint may have changed. Make sure you have a valid API key.'
+      } else if (errMsg.includes('401') || errMsg.includes('403')) {
+        title = 'Invalid API Key'
+        fix = 'Check your OpenRouter API key (starts with "sk-").'
+      } else if (errMsg.includes('429')) {
+        title = 'Rate Limited'
+        fix = 'Wait a moment before trying again.'
+      } else if (errMsg.includes('network') || errMsg.includes('fetch')) {
+        title = 'Network Error'
+        fix = 'Check your internet connection.'
+      }
+      
+      setErrorModal({ title, message: errMsg + (fix ? '\n\nFix: ' + fix : '') })
       addAIThought('⚠️ Error - using fallback')
     }
     
@@ -1296,6 +1317,18 @@ export default function App() {
           </div>
         </div>
       )}
+      
+      {errorModal && (
+        <div className="error-overlay" onClick={() => setErrorModal(null)}>
+          <div className="error-modal" onClick={e => e.stopPropagation()}>
+            <div className="error-icon">⚠️</div>
+            <h2>{errorModal.title}</h2>
+            <p className="error-message">{errorModal.message}</p>
+            <button className="error-btn" onClick={() => setErrorModal(null)}>OK</button>
+          </div>
+        </div>
+      )}
+      
       <header className="header">
         <div className="header-left">
           <div className="logo">
