@@ -10,9 +10,25 @@ export interface DrumStep {
   velocity: number
 }
 
+export interface DrumKit {
+  name: string
+  samples: Record<string, { freq: number; decay: number; type: string }>
+}
+
 export interface DrumTrack {
   kit: string
   pattern: (number | null)[][]
+  customKit?: DrumKit
+}
+
+export interface SynthSound {
+  waveform: OscillatorType
+  filterCutoff: number
+  filterResonance: number
+  attack: number
+  decay: number
+  sustain: number
+  release: number
 }
 
 export interface Chord {
@@ -22,6 +38,7 @@ export interface Chord {
 
 export interface MelodyTrack {
   notes: Note[]
+  sound?: SynthSound
 }
 
 export interface Track {
@@ -29,6 +46,14 @@ export interface Track {
   drums?: DrumTrack
   chords?: Chord[]
   bass?: MelodyTrack
+  id: string
+  name: string
+  type: 'melody' | 'drums' | 'bass' | 'chords'
+  color: string
+  volume: number
+  pan: number
+  muted: boolean
+  solo: boolean
 }
 
 export interface Project {

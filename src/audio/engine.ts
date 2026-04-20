@@ -5,6 +5,23 @@ export type Note = {
   velocity: number
 }
 
+export type OscillatorType = 'sine' | 'square' | 'sawtooth' | 'triangle'
+
+export interface SynthSound {
+  waveform: OscillatorType
+  filterCutoff: number
+  filterResonance: number
+  attack: number
+  decay: number
+  sustain: number
+  release: number
+}
+
+export interface DrumKitConfig {
+  name: string
+  samples: Record<string, { freq: number; decay: number; type: string }>
+}
+
 class AudioEngine {
   private ctx: AudioContext | null = null
   private masterGain: GainNode | null = null
@@ -14,6 +31,21 @@ class AudioEngine {
   private synthWaveform: OscillatorType = 'sawtooth'
   private drumKit: string = 'default'
   private reverbMix = 0.18
+
+  // Per-track sound settings
+  private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 3000, filterResonance: 1.4, attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.5 }
+  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 1500, filterResonance: 0.8, attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 }
+  private drumKitConfig: DrumKitConfig = { 
+    name: 'default', 
+    samples: {
+      kick: { freq: 60, decay: 0.4, type: 'sine' },
+      snare: { freq: 200, decay: 0.2, type: 'noise' },
+      hihat: { freq: 800, decay: 0.08, type: 'noise' },
+      clap: { freq: 400, decay: 0.15, type: 'noise' },
+      tom: { freq: 120, decay: 0.3, type: 'sine' },
+      openhat: { freq: 600, decay: 0.4, type: 'noise' }
+    } 
+  }
 
   private sampleBuffers: Map<string, AudioBuffer> = new Map()
 
@@ -242,6 +274,38 @@ class AudioEngine {
   async resume() {
     if (this.ctx?.state === 'suspended') {
       await this.ctx.resume()
+    }
+  }
+
+  // Sound setters
+  setMelodySound(sound: Partial<SynthSound>) {
+    this.melodySound = { ...this.melodySound, ...sound }
+  }
+  getMelodySound(): SynthSound {
+    return this.melodySound
+  }
+  setBassSound(sound: Partial<SynthSound>) {
+    this.bassSound = { ...this.bassSound, ...sound }
+  }
+  getBassSound(): SynthSound {
+    return this.bassSound
+  }
+  setDrumKitConfig(config: DrumKitConfig) {
+    this.drumKitConfig = config
+  }
+  getDrumKitConfig(): DrumKitConfig {
+    return this.drumKitConfig
+  }
+
+  stopAll() {
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend()
+    }
+  }
+
+  resumePlayback() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume()
     }
   }
 }
