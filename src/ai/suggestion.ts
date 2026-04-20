@@ -57,6 +57,7 @@ function clampNote(n: Record<string, number>): { pitch: number; time: number; du
 
 export async function getAISuggestion(
   apiKey: string,
+  model: string,
   currentMelody: Array<{ pitch: number; time: number; duration: number; velocity: number }>,
   currentDrums: number[][],
   currentChords: Array<{ name: string; duration: number }>,
@@ -115,7 +116,7 @@ Generate the next 4 bars continuing this musical idea. Make it sound intentional
       'X-Title': 'BeatMaker',
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
+      model: model || 'openrouter/free',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

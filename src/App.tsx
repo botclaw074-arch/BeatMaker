@@ -65,6 +65,7 @@ export default function App() {
   const [currentBeat, setCurrentBeat] = useState(0)
   const [totalBars, setTotalBars] = useState(4)
   const [apiKey, setApiKey] = useState('')
+  const [aiModel, setAiModel] = useState('openrouter/free')
   const [isLoadingKey, setIsLoadingKey] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
   const [volume, setVolume] = useState(0.7)
@@ -253,9 +254,10 @@ export default function App() {
         return
       }
       
-      addAIThought(`🤖 Calling AI (${currentKey} ${currentMode}, ${genre})...`)
+      addAIThought(`🤖 Calling AI (${aiModel}, ${currentKey} ${currentMode})...`)
       const suggestion = await getAISuggestion(
         apiKey,
+        aiModel,
         project.tracks.melody.notes,
         project.tracks.drums.pattern,
         project.tracks.chords,
@@ -1026,7 +1028,14 @@ export default function App() {
                 {[...aiThoughts].reverse().map(t => <div key={t.id} className="thought-bubble">{t.text}</div>)}
               </div>
               <div className="ai-input">
-                <input type="password" placeholder="OpenRouter API Key (optional)" value={apiKey} onChange={e => setApiKey(e.target.value)} onBlur={saveApiKey} disabled={isLoadingKey} />
+                <input type="password" placeholder="OpenRouter API Key" value={apiKey} onChange={e => setApiKey(e.target.value)} onBlur={saveApiKey} disabled={isLoadingKey} />
+                <select value={aiModel} onChange={e => setAiModel(e.target.value)} className="model-select">
+                  <option value="openrouter/free">Auto (Free)</option>
+                  <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+                  <option value="google/gemini-2.0-flash">Gemini 2.0</option>
+                  <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1</option>
+                  <option value="mistralai/mistral-small">Mistral Small</option>
+                </select>
                 <input
                   type="text"
                   className="intent-input"
