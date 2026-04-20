@@ -115,7 +115,7 @@ Generate the next 4 bars continuing this musical idea. Make it sound intentional
       'X-Title': 'BeatMaker',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-001:free',
+      model: 'google/gemini-2.0-flash-exp',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
