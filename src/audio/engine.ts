@@ -33,8 +33,8 @@ class AudioEngine {
   private reverbMix = 0.18
 
   // Per-track sound settings
-  private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 3000, filterResonance: 1.4, attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.5 }
-  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 1500, filterResonance: 0.8, attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 }
+  private melodySound: SynthSound = { waveform: 'sawtooth', filterCutoff: 4500, filterResonance: 2.2, attack: 0.015, decay: 0.35, sustain: 0.5, release: 0.6 }
+  private bassSound: SynthSound = { waveform: 'square', filterCutoff: 2000, filterResonance: 1.2, attack: 0.01, decay: 0.25, sustain: 0.55, release: 0.35 }
   private drumKitConfig: DrumKitConfig = { 
     name: 'default', 
     samples: {
@@ -159,49 +159,59 @@ class AudioEngine {
     if (!this.ctx || !this.masterGain) return
 
     const vel = note.velocity / 127
+    const sound = this.melodySound
     
+    // Better synth: 3 oscillators for richer sound
     const osc1 = this.ctx.createOscillator()
     const osc2 = this.ctx.createOscillator()
+    const osc3 = this.ctx.createOscillator()
     const filter = this.ctx.createBiquadFilter()
     const noteGain = this.ctx.createGain()
     const ampEnv = this.ctx.createGain()
-
-    osc1.type = this.synthWaveform
-    osc1.frequency.value = this.noteToFrequency(note.pitch)
-    osc1.detune.value = this.synthWaveform === 'square' ? 8 : 6
     
-    osc2.type = this.synthWaveform === 'sine' ? 'triangle' : 'sine'
-    osc2.frequency.value = this.noteToFrequency(note.pitch) * (this.synthWaveform === 'square' ? 0.49 : 0.51)
-    osc2.detune.value = this.synthWaveform === 'square' ? -8 : -5
+    const freq = this.noteToFrequency(note.pitch)
+
+    osc1.type = sound.waveform
+    osc1.frequency.value = freq
+    osc1.detune.value = 7
+    
+    osc2.type = sound.waveform === 'sine' ? 'triangle' : 'sawtooth'
+    osc2.frequency.value = freq * 2.01  // Octave up for harmonics
+    osc2.detune.value = -5
+    
+    osc3.type = 'sine'
+    osc3.frequency.value = freq * 0.5  // Sub-octave
+    osc3.detune.value = 0
 
     filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(3000 + vel * 1600, this.ctx.currentTime + startTime)
+    filter.frequency.setValueAtTime(sound.filterCutoff + vel * 2000, this.ctx.currentTime + startTime)
     
-    const dur = note.duration * (60 / this.bpm) * 0.75
+    const dur = note.duration * (60 / this.bpm) * 0.8
     
-    filter.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + startTime + dur * 0.45)
-    filter.Q.value = this.synthWaveform === 'triangle' ? 1.8 : 1.4
+    filter.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + startTime + dur * 0.5)
+    filter.Q.value = sound.filterResonance
 
     const now = this.ctx.currentTime + startTime
 
-    const targetGain = Math.max(0.08, vel * 0.35) * gain
+    const targetGain = Math.max(0.1, vel * 0.5) * gain
 
     noteGain.gain.setValueAtTime(0.0001, now)
-    noteGain.gain.exponentialRampToValueAtTime(targetGain, now + 0.02)
-    noteGain.gain.linearRampToValueAtTime(Math.max(0.02, vel * 0.22) * gain, now + dur * 0.35)
+    noteGain.gain.exponentialRampToValueAtTime(targetGain, now + sound.attack)
+    noteGain.gain.linearRampToValueAtTime(targetGain * sound.sustain, now + dur * 0.3)
     noteGain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
 
     ampEnv.gain.value = 1
 
     osc1.connect(filter)
     osc2.connect(filter)
+    osc3.connect(filter)
     filter.connect(noteGain)
     noteGain.connect(ampEnv)
     ampEnv.connect(this.masterGain)
 
     if (this.reverbNode) {
       const reverbGain = this.ctx.createGain()
-      reverbGain.gain.value = 0.16
+      reverbGain.gain.value = 0.18
       ampEnv.connect(this.reverbNode)
       this.reverbNode.connect(reverbGain)
       reverbGain.connect(this.masterGain)
@@ -209,8 +219,10 @@ class AudioEngine {
 
     osc1.start(now)
     osc2.start(now)
+    osc3.start(now)
     osc1.stop(now + dur)
     osc2.stop(now + dur)
+    osc3.stop(now + dur)
   }
 
   playDrum(sampleName: string, time: number, velocity = 1) {
